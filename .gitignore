@@ -1,15 +1,24 @@
 node_modules/
 dist/
 *.tsbuildinfo
+coverage/
+# `npm pack` output. Publishing happens from a clone, so the tarball lands here.
+*.tgz
+# An npm auth token lives in this file, and publishing is done from this directory.
+.npmrc
 
 # Anything an agent project keeps locally. `agent init` writes the same two lines
 # into the project it scaffolds; they are here as well because this repository's
 # own fixtures and manual runs land in the same places.
 .env
-.env.local
+.env.*
 .agentspaces/
 
 # Internal planning document, deliberately not part of the open-source history.
 SCOPE.md
+
+# Editors, so a contributor's setup is never part of a diff.
+.vscode/
+.idea/
 
 .DS_Store
