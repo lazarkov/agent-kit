@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { ApiClient, DEFAULT_API } from './api.js';
 import { boolFlag, parseArgs, stringFlag } from './args.js';
 import type { ParsedArgs } from './args.js';
+import { build } from './commands/build.js';
 import { doctor } from './commands/doctor.js';
 import { explain } from './commands/explain.js';
 import { init } from './commands/init.js';
@@ -24,6 +25,7 @@ type Command = (ctx: Context, args: ParsedArgs) => Promise<void>;
 /** Exported so a test can insist every command here is documented and exercised. */
 export const COMMANDS: Record<string, Command> = {
   init,
+  build,
   validate,
   explain,
   templates,

@@ -39,20 +39,26 @@ export function loadDocument(cwd: string, target?: string | null): LoadedDocumen
   }
 
   const source = readFileSync(path, 'utf8');
+  guardSource(source, basename(path));
+  return { path, source };
+}
 
+/**
+ * The two refusals that apply to any source, however it was produced: read from a
+ * file, or compiled out of a project directory. `label` is what the reader should go
+ * and look at.
+ */
+export function guardSource(source: string, label: string): void {
   if (source.trim().length === 0) {
-    throw new CliError(`${basename(path)} is empty.`);
+    throw new CliError(`${label} is empty.`);
   }
 
   const bytes = Buffer.byteLength(source, 'utf8');
   if (bytes > MAX_SOURCE_BYTES) {
     // Checked here rather than left to the API, because the request would carry
     // the whole document across the wire only to be refused on arrival.
-    throw new CliError(
-      `${basename(path)} is ${Math.round(bytes / 1024)} KB; the limit is 64 KB.`,
-      { hint: 'Move long reference material into a layer repository instead of the document.' },
-    );
+    throw new CliError(`${label} is ${Math.round(bytes / 1024)} KB; the limit is 64 KB.`, {
+      hint: 'Move long reference material into a layer repository instead of the document.',
+    });
   }
-
-  return { path, source };
 }

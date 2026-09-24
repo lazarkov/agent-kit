@@ -1,0 +1,10 @@
+# Who this agent is, on the card and in the catalogue.
+# id, version, name, description and category are required; everything else in this
+# project is optional. `agent build` puts this block at the top of the compiled
+# document, so these are the platform's own field names.
+id: my-agent
+version: 0.1.0
+name: My Agent
+description: One sentence on what this agent does, in the words you would use to a colleague.
+category: productivity
+tags: [Starter]

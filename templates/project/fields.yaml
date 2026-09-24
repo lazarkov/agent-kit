@@ -1,0 +1,22 @@
+# What the person deploying this agent is asked for.
+#
+# These three are the LLM keys, which the `llm` step in onboarding.yaml collects on
+# its own, so this agent needs no form. Add a field of your own here and you also
+# need a `panel: config` step in onboarding.yaml; `agent validate` will say so if you
+# forget. A field marked sensitive is stored encrypted and never shown again.
+- key: llmProvider
+  label: LLM Provider
+  type: enum
+  required: true
+  enumValues: [openrouter, anthropic, openai, ollama-cloud]
+- key: llmApiKey
+  label: LLM API Key
+  type: string
+  required: true
+  sensitive: true
+- key: llmModel
+  label: LLM Model
+  type: string
+  required: false
+  placeholder: anthropic/claude-sonnet-4.6
+  help: Leave empty to use the model named in config.yaml.

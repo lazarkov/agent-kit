@@ -4,9 +4,10 @@ import { join } from 'node:path';
 import { unwrap } from '../api.js';
 import type { ParsedArgs } from '../args.js';
 import type { Context } from '../context.js';
-import { DEFAULT_DOCUMENT, loadDocument } from '../document.js';
+import { DEFAULT_DOCUMENT } from '../document.js';
 import { CliError } from '../errors.js';
 import { jsonOut } from '../output.js';
+import { isProject, loadSource, MANIFEST } from '../project.js';
 import type { BlueprintPreview, RuntimeInfo } from '../types.js';
 
 const MINIMUM_NODE = [20, 11] as const;
@@ -29,14 +30,13 @@ export async function doctor(ctx: Context, _args: ParsedArgs): Promise<void> {
 
   checks.push(await apiCheck(ctx));
 
-  const documentPath = join(ctx.cwd, DEFAULT_DOCUMENT);
-  if (existsSync(documentPath)) {
-    checks.push(await documentCheck(ctx));
+  if (isProject(ctx.cwd) || existsSync(join(ctx.cwd, DEFAULT_DOCUMENT))) {
+    checks.push(await agentCheck(ctx));
   } else {
     checks.push({
-      name: 'document',
+      name: 'agent',
       ok: true,
-      detail: `no ${DEFAULT_DOCUMENT} here — run 'agent init' to start one`,
+      detail: `no ${MANIFEST} here: run 'agent init' to scaffold a project`,
     });
   }
 
@@ -83,18 +83,18 @@ async function apiCheck(ctx: Context): Promise<Check> {
   }
 }
 
-async function documentCheck(ctx: Context): Promise<Check> {
+async function agentCheck(ctx: Context): Promise<Check> {
   try {
-    const document = loadDocument(ctx.cwd);
+    const agent = loadSource(ctx.cwd);
     const preview = unwrap<BlueprintPreview>(
-      await ctx.api.post('/agents/blueprints/validate', { source: document.source }),
+      await ctx.api.post('/agents/blueprints/validate', { source: agent.source }),
     );
     return {
-      name: 'document',
+      name: 'agent',
       ok: true,
-      detail: `${DEFAULT_DOCUMENT} is valid — ${preview.id} on ${preview.brain ?? 'hermes'}`,
+      detail: `this ${agent.kind} is valid: ${preview.id} on ${preview.brain ?? 'hermes'}`,
     };
   } catch (err) {
-    return { name: 'document', ok: false, detail: (err as Error).message };
+    return { name: 'agent', ok: false, detail: (err as Error).message };
   }
 }

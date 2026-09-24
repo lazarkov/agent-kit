@@ -19,9 +19,18 @@ export function rewriteFrontmatter(source: string, values: Rewrite): string {
   const match = /^---\r?\n([\s\S]*?)\r?\n---(\r?\n|$)/.exec(source);
   if (!match) return source;
 
-  const block = match[1]!;
-  let rewritten = block;
+  const rewritten = rewriteScalars(match[1]!, values);
+  const before = source.slice(0, match.index);
+  const after = source.slice(match.index + match[0].length);
+  return `${before}---\n${rewritten}\n---\n${after}`;
+}
 
+/**
+ * The same rewrite on a bare YAML block, which is what a project's manifest is:
+ * `agent.yaml` holds exactly what a document would put between the `---` lines.
+ */
+export function rewriteScalars(block: string, values: Rewrite): string {
+  let rewritten = block;
   for (const [key, value] of Object.entries(values)) {
     if (value === undefined) continue;
     const line = new RegExp(`^${key}:[ \\t]*.*$`, 'm');
@@ -29,10 +38,13 @@ export function rewriteFrontmatter(source: string, values: Rewrite): string {
       ? rewritten.replace(line, `${key}: ${value}`)
       : `${rewritten}\n${key}: ${value}`;
   }
+  return rewritten;
+}
 
-  const before = source.slice(0, match.index);
-  const after = source.slice(match.index + match[0].length);
-  return `${before}---\n${rewritten}\n---\n${after}`;
+/** One scalar out of a bare YAML block, for telling a reader what they just made. */
+export function readScalar(block: string, key: string): string | null {
+  const line = new RegExp(`^${key}:[ \\t]*(.*)$`, 'm').exec(block);
+  return line ? (line[1]?.trim() ?? null) : null;
 }
 
 /** Reads one frontmatter scalar, for telling the user what their document is called. */

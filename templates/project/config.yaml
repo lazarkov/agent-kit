@@ -1,0 +1,9 @@
+# How the agent runs: its model, and what it is allowed to touch.
+defaultModel: anthropic/claude-sonnet-4.6
+
+# Drop `toolsets` entirely to get every core tool. Listed here to keep this agent to
+# what it needs: a terminal, files, and memory across conversations.
+toolsets:
+  - terminal
+  - file
+  - memory

@@ -1,0 +1,14 @@
+# The steps someone walks through to get this agent running.
+# Three is the minimum that works: a key, a server, a start.
+- id: llm
+  panel: llm
+  label: LLM Provider
+  description: Bring your own key
+- id: create-agent
+  panel: create-agent
+  label: Create Agent
+  description: Deploy it to a server
+- id: start
+  panel: start
+  label: Go Live
+  description: Start working

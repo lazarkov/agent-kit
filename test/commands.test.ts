@@ -470,7 +470,7 @@ describe('search', () => {
 });
 
 describe('doctor', () => {
-  it('passes with a reachable api and no document', async () => {
+  it('passes with a reachable api and no agent here', async () => {
     await withTempDir(async (dir) => {
       const { client } = fakeApi({
         '/agents/runtimes': { body: { data: [{ brain: 'hermes', image: 'x' }] } },
@@ -485,7 +485,7 @@ describe('doctor', () => {
     });
   });
 
-  it('fails, with the reason, when the api refuses the document here', async () => {
+  it('fails, with the reason, when the api refuses the agent here', async () => {
     await withTempDir(async (dir) => {
       writeFileSync(join(dir, 'agent.md'), DOCUMENT, 'utf8');
       const { client } = fakeApi({
@@ -499,7 +499,7 @@ describe('doctor', () => {
 
       await expect(
         run(['doctor'], { io, cwd: dir, tty: false, env: {}, api: client }),
-      ).rejects.toThrow(/check\(s\) failed: document/);
+      ).rejects.toThrow(/check\(s\) failed: agent/);
       expect(io.text()).toContain("no '## Soul' section");
     });
   });
@@ -518,7 +518,7 @@ describe('doctor', () => {
       };
 
       expect(report.ok).toBe(true);
-      expect(report.checks.map((check) => check.name)).toEqual(['node', 'api', 'document']);
+      expect(report.checks.map((check) => check.name)).toEqual(['node', 'api', 'agent']);
     });
   });
 

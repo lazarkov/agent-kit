@@ -20,8 +20,9 @@ export function packageRoot(from: string = fileURLToPath(import.meta.url)): stri
   throw new Error('Could not locate the package root from this module.');
 }
 
-export function templatePath(name: string): string {
-  return join(packageRoot(), 'templates', `${name}.md`);
+/** The scaffold `agent init` copies: one directory, one file per section. */
+export function projectTemplateDir(): string {
+  return join(packageRoot(), 'templates', 'project');
 }
 
 /**

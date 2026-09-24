@@ -4,25 +4,25 @@ import { unwrap } from '../api.js';
 import type { ParsedArgs } from '../args.js';
 import { stringFlag } from '../args.js';
 import type { Context } from '../context.js';
-import { loadDocument } from '../document.js';
 import { jsonOut, table } from '../output.js';
+import { loadSource } from '../project.js';
 import type { BlueprintPreview } from '../types.js';
 
 /**
- * Asks the platform to read the document and say what it would build.
+ * Builds the project and asks the platform what it would make of it.
  *
- * There is no parser in this package on purpose. The blueprint format belongs to
- * the backend, which validates section by section and answers with the section it
+ * There is no blueprint parser in this package on purpose. The format belongs to the
+ * backend, which validates section by section and answers with the section it
  * objected to and the likely fix; a copy of those rules living out here would be
- * wrong within a release, and wrong in the direction of passing documents the
- * platform will then refuse.
+ * wrong within a release, and wrong in the direction of passing agents the platform
+ * will then refuse.
  */
 export async function validate(ctx: Context, args: ParsedArgs): Promise<void> {
   const target = args.positionals[0] ?? stringFlag(args, 'file');
-  const document = loadDocument(ctx.cwd, target);
+  const agent = loadSource(ctx.cwd, target);
 
   const preview = unwrap<BlueprintPreview>(
-    await ctx.api.post('/agents/blueprints/validate', { source: document.source }),
+    await ctx.api.post('/agents/blueprints/validate', { source: agent.source }),
   );
 
   if (ctx.json) {
@@ -30,7 +30,7 @@ export async function validate(ctx: Context, args: ParsedArgs): Promise<void> {
     return;
   }
 
-  const shown = relative(ctx.cwd, document.path) || document.path;
+  const shown = relative(ctx.cwd, agent.path) || agent.path;
   ctx.io.out(`${ctx.style.green('valid')}  ${shown}`);
   ctx.io.out('');
 

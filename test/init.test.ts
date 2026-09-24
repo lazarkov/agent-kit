@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -20,7 +20,7 @@ const EXAMPLES = {
 };
 
 describe('init', () => {
-  it('writes a document from the vendored template without touching the network', async () => {
+  it('scaffolds a project from the vendored files without touching the network', async () => {
     await withTempDir(async (dir) => {
       const io = recordingIo();
       // No api passed: a fake would still prove nothing, but a real client with no
@@ -28,10 +28,13 @@ describe('init', () => {
       const code = await run(['init'], { io, cwd: dir, tty: false, env: {} });
 
       expect(code).toBe(0);
-      const source = readFileSync(join(dir, 'agent.md'), 'utf8');
-      expect(source).toContain('## Soul');
-      expect(source).toContain('## Runtime');
-      expect(io.text()).toContain('created');
+      for (const file of ['agent.yaml', 'soul.md', 'config.yaml', 'fields.yaml', '.env']) {
+        expect(existsSync(join(dir, file)), file).toBe(true);
+      }
+      // The one file the author must write is the one they are pointed at.
+      expect(io.text()).toContain('soul.md');
+      // Nobody should be editing a document: there is not one to edit.
+      expect(existsSync(join(dir, 'agent.md'))).toBe(false);
     });
   });
 
@@ -40,40 +43,72 @@ describe('init', () => {
       const io = recordingIo();
       await run(['init', 'inbox-helper'], { io, cwd: dir, tty: false, env: {} });
 
-      const source = readFileSync(join(dir, 'inbox-helper', 'agent.md'), 'utf8');
-      expect(source).toContain('id: inbox-helper');
-      expect(source).toContain('name: Inbox Helper');
+      const manifest = readFileSync(join(dir, 'inbox-helper', 'agent.yaml'), 'utf8');
+      expect(manifest).toContain('id: inbox-helper');
+      expect(manifest).toContain('name: Inbox Helper');
       // The platform rejects the literal 'my-agent' as an unfilled placeholder, so
-      // leaving it in would be a document that cannot deploy.
-      expect(source).not.toContain('my-agent');
+      // leaving it in would be a project that cannot deploy.
+      expect(manifest).not.toContain('my-agent');
     });
   });
 
-  it('leaves an existing document alone unless forced', async () => {
+  it('writes a project the platform accepts, sections and all', async () => {
     await withTempDir(async (dir) => {
-      writeFileSync(join(dir, 'agent.md'), 'mine\n', 'utf8');
+      await run(['init', 'notes'], { io: recordingIo(), cwd: dir, tty: false, env: {} });
+      const io = recordingIo();
+      await run(['build', 'notes', '--emit'], { io, cwd: dir, tty: false, env: {} });
+
+      const source = io.text();
+      // Transcribed from a live 200: this is the text POST /agents/blueprints/validate
+      // was given when the scaffold was written.
+      expect(source).toContain(`'{{llmKeyVar}}': '{{llmApiKey}}'`);
+      expect(source).toContain('### {{home}}/notes/README.md');
+      for (const section of ['## Config', '## Onboarding', '## Environment', '## Runtime', '## Soul']) {
+        expect(source, section).toContain(section);
+      }
+    });
+  });
+
+  it('leaves an existing agent alone unless forced', async () => {
+    await withTempDir(async (dir) => {
+      writeFileSync(join(dir, 'agent.yaml'), 'id: mine\n', 'utf8');
       const io = recordingIo();
 
       await expect(run(['init'], { io, cwd: dir, tty: false, env: {} })).rejects.toThrow(
         /already exists/,
       );
-      expect(readFileSync(join(dir, 'agent.md'), 'utf8')).toBe('mine\n');
+      expect(readFileSync(join(dir, 'agent.yaml'), 'utf8')).toBe('id: mine\n');
 
       await run(['init', '--force'], { io, cwd: dir, tty: false, env: {} });
-      expect(readFileSync(join(dir, 'agent.md'), 'utf8')).toContain('## Soul');
+      expect(readFileSync(join(dir, 'agent.yaml'), 'utf8')).toContain('description:');
     });
   });
 
-  it('keeps values and local state out of a commit', async () => {
+  it('refuses a directory holding a document, which is the other shape of the same thing', async () => {
+    await withTempDir(async (dir) => {
+      writeFileSync(join(dir, 'agent.md'), 'mine\n', 'utf8');
+
+      await expect(
+        run(['init'], { io: recordingIo(), cwd: dir, tty: false, env: {} }),
+      ).rejects.toThrow(/already exists/);
+    });
+  });
+
+  it('keeps local values and the build output out of a commit', async () => {
     await withTempDir(async (dir) => {
       await run(['init'], { io: recordingIo(), cwd: dir, tty: false, env: {} });
       const ignore = readFileSync(join(dir, '.gitignore'), 'utf8').split('\n');
-      expect(ignore).toContain('.env');
+
+      expect(ignore).toContain('.env.local');
       expect(ignore).toContain('.agentspaces/');
+      // .env is committed on purpose: it declares the variable names the container
+      // reads, and the placeholders they are filled from. Ignoring it would break
+      // every clone of the project.
+      expect(ignore).not.toContain('.env');
     });
   });
 
-  it('fetches a platform template and renames it to the target directory', async () => {
+  it('fetches a platform example as the one document it is, and renames it', async () => {
     await withTempDir(async (dir) => {
       const { client, calls } = fakeApi({ '/agents/blueprints/examples': { body: EXAMPLES } });
       const io = recordingIo();
@@ -87,9 +122,12 @@ describe('init', () => {
       });
 
       expect(calls).toHaveLength(1);
+      // An example cannot be turned back into a project: that would need a blueprint
+      // parser, which this package deliberately does not have.
       const source = readFileSync(join(dir, 'notes', 'agent.md'), 'utf8');
       expect(source).toContain('id: notes');
       expect(source).toContain('You are a notebook.');
+      expect(existsSync(join(dir, 'notes', 'agent.yaml'))).toBe(false);
     });
   });
 
@@ -99,10 +137,11 @@ describe('init', () => {
       await run(['init', 'notes', '--json'], { io, cwd: dir, tty: false, env: {} });
 
       expect(JSON.parse(io.text())).toMatchObject({
-        path: join(dir, 'notes', 'agent.md'),
+        path: join(dir, 'notes'),
         id: 'notes',
-        template: 'starter template',
+        template: 'starter project',
       });
+      expect(JSON.parse(io.text()).files).toContain('soul.md');
     });
   });
 

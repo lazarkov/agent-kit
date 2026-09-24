@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { packageRoot, templatePath } from '../src/paths.js';
+import { packageRoot, projectTemplateDir } from '../src/paths.js';
 
 interface Manifest {
   name: string;
@@ -24,7 +24,7 @@ const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as
 describe('the package', () => {
   it('ships the templates directory, or init breaks for everyone who installs it', () => {
     expect(manifest.files).toContain('templates');
-    expect(existsSync(templatePath('starter'))).toBe(true);
+    expect(existsSync(join(projectTemplateDir(), 'agent.yaml'))).toBe(true);
   });
 
   it('ships the build, and the bins point into it', () => {

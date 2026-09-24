@@ -1,0 +1,12 @@
+# What the container gets as environment variables.
+#
+# Values in braces are filled in when someone deploys the agent, from the fields in
+# fields.yaml. This file is committed, so it holds names and placeholders only: put a
+# real key in here and you have published it. Real values are typed into the wizard
+# and stored encrypted.
+LLM_PROVIDER={{llmProvider | "openrouter"}}
+LLM_MODEL={{llmModel | defaultModel}}
+
+# The variable name is templated too, so the key lands under whichever name the
+# provider that was chosen actually reads.
+{{llmKeyVar}}={{llmApiKey}}

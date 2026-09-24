@@ -4,24 +4,24 @@ import { unwrap } from '../api.js';
 import type { ParsedArgs } from '../args.js';
 import { stringFlag } from '../args.js';
 import type { Context } from '../context.js';
-import { loadDocument } from '../document.js';
 import { jsonOut } from '../output.js';
+import { loadSource } from '../project.js';
 import type { BlueprintPreview } from '../types.js';
 
 /**
  * The long form of `validate`: the same preview, read out as what will happen.
  *
- * It exists because the document is the whole product. A person editing one wants
- * to know what the wizard will ask, which variables reach the container, what the
- * agent is allowed to touch and what it will be told it is — before paying for a
- * server to find out.
+ * It exists because a project is a pile of files and none of them says what the
+ * whole adds up to. A person editing one wants to know what the wizard will ask,
+ * which variables reach the container, what the agent is allowed to touch and what
+ * it will be told it is, before paying for a server to find out.
  */
 export async function explain(ctx: Context, args: ParsedArgs): Promise<void> {
   const target = args.positionals[0] ?? stringFlag(args, 'file');
-  const document = loadDocument(ctx.cwd, target);
+  const agent = loadSource(ctx.cwd, target);
 
   const preview = unwrap<BlueprintPreview>(
-    await ctx.api.post('/agents/blueprints/validate', { source: document.source }),
+    await ctx.api.post('/agents/blueprints/validate', { source: agent.source }),
   );
 
   if (ctx.json) {
@@ -32,7 +32,7 @@ export async function explain(ctx: Context, args: ParsedArgs): Promise<void> {
   const { style, io } = ctx;
   io.out(`${style.bold(preview.name)} ${style.dim(`(${preview.id})`)}`);
   io.out(preview.description);
-  io.out(style.dim(relative(ctx.cwd, document.path) || document.path));
+  io.out(style.dim(relative(ctx.cwd, agent.path) || agent.path));
   io.out('');
 
   const brain = preview.brain ?? 'hermes';
