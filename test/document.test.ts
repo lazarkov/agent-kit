@@ -65,8 +65,9 @@ describe('loadDocument', () => {
   it('measures the limit in bytes, not characters', async () => {
     await withTempDir(async (dir) => {
       // Just under in characters, well over in UTF-8: the platform counts bytes, so a
-      // document of em dashes must be refused on the same terms it will be there.
-      const source = '—'.repeat(MAX_SOURCE_BYTES / 2);
+      // document of three-byte characters must be refused on the same terms it will be
+      // there.
+      const source = '…'.repeat(MAX_SOURCE_BYTES / 2);
       writeFileSync(join(dir, DEFAULT_DOCUMENT), source, 'utf8');
       expect(source.length).toBeLessThan(MAX_SOURCE_BYTES);
       expect(() => loadDocument(dir)).toThrow(/the limit is 64 KB/);

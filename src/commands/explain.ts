@@ -47,7 +47,7 @@ export async function explain(ctx: Context, args: ParsedArgs): Promise<void> {
     io.out(section(style, 'What it asks for before it starts'));
     for (const [index, step] of steps.entries()) {
       const label = step.label ?? step.id;
-      io.out(`  ${index + 1}. ${label} ${style.dim(`— ${step.description ?? step.panel}`)}`);
+      io.out(`  ${index + 1}. ${label} ${style.dim(`(${step.description ?? step.panel})`)}`);
     }
     io.out('');
   }
@@ -74,7 +74,7 @@ export async function explain(ctx: Context, args: ParsedArgs): Promise<void> {
     // Names with braces are resolved per-deploy, and reading that as a literal
     // variable name is the mistake this line exists to prevent.
     if (envKeys.some((key) => key.includes('{{'))) {
-      io.out(style.dim('  A templated name resolves when the agent is created — the key lands under whatever the chosen provider reads.'));
+      io.out(style.dim('  A templated name resolves when the agent is created: the key lands under whatever the chosen provider reads.'));
     }
     io.out('');
   }
@@ -85,10 +85,10 @@ export async function explain(ctx: Context, args: ParsedArgs): Promise<void> {
     const withheld = toolsets.filter((toolset) => !toolset.enabled);
     io.out(section(style, 'What it is allowed to do'));
     for (const toolset of enabled) {
-      io.out(`  ${style.green('✓')} ${toolset.label ?? toolset.key} ${style.dim(toolset.tools ? `— ${toolset.tools}` : '')}`);
+      io.out(`  ${style.green('✓')} ${toolset.label ?? toolset.key} ${style.dim(toolset.tools ? `(${toolset.tools})` : '')}`);
     }
     for (const toolset of withheld) {
-      io.out(`  ${style.dim('·')} ${style.dim(`${toolset.label ?? toolset.key} — withheld`)}`);
+      io.out(`  ${style.dim('·')} ${style.dim(`${toolset.label ?? toolset.key}: withheld`)}`);
     }
     io.out('');
   }
@@ -106,7 +106,7 @@ export async function explain(ctx: Context, args: ParsedArgs): Promise<void> {
   if (schedule.length > 0) {
     io.out(section(style, 'What it does on its own'));
     for (const job of schedule) {
-      // `deliver` defaults to telegram on the platform, not to the caller — an agent
+      // `deliver` defaults to telegram on the platform, not to the caller: an agent
       // whose nightly report goes somewhere the author did not expect is the failure
       // this line is here to prevent.
       const how = job.noAgent

@@ -7,8 +7,8 @@ import type { BlueprintExample } from '../types.js';
 /**
  * What `init --template` can start from.
  *
- * The platform's examples are ordered on purpose — each adds one part of the format
- * to the one before it — so they are printed in the order they arrive rather than
+ * The platform's examples are ordered on purpose, each adding one part of the format
+ * to the one before it, so they are printed in the order they arrive rather than
  * sorted.
  */
 export async function templates(ctx: Context, _args: ParsedArgs): Promise<void> {

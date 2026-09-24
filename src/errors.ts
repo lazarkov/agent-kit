@@ -1,8 +1,8 @@
 /**
  * Failures a user is meant to read, as opposed to stack traces.
  *
- * Two exit codes and no more: 1 is "what you asked for did not work" — an invalid
- * document, an API that refused, a file that is not there — and 2 is "I did not
+ * Two exit codes and no more: 1 is "what you asked for did not work" (an invalid
+ * project, an API that refused, a file that is not there) and 2 is "I did not
  * understand the command". A script can branch on that; a longer table would only
  * be a table nobody memorises.
  */

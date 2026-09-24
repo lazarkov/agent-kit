@@ -13,7 +13,7 @@ const PROVIDERS = ['openrouter', 'requesty', 'anthropic', 'openai', 'ollama-clou
  *
  * This matters more than it sounds: `defaultModel` in a document has to be a name
  * the chosen provider actually serves, and the failure when it is not is an agent
- * that deploys, starts, and answers nothing. Some providers need a key to list —
+ * that deploys, starts, and answers nothing. Some providers need a key to list,
  * `--key` is passed through for that one call and never written to disk.
  */
 export async function models(ctx: Context, args: ParsedArgs): Promise<void> {

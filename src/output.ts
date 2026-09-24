@@ -78,7 +78,7 @@ export function table(rows: readonly [string, string][], gap = 2): string[] {
  * unit every provider quotes, and a free model should say so rather than say $0.00.
  */
 export function formatPrice(perToken: number | null | undefined): string {
-  if (perToken === null || perToken === undefined) return '—';
+  if (perToken === null || perToken === undefined) return '-';
   if (perToken === 0) return 'free';
   const perMillion = perToken * 1_000_000;
   const decimals = perMillion < 1 ? 3 : 2;

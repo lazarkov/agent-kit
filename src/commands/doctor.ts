@@ -76,7 +76,7 @@ async function apiCheck(ctx: Context): Promise<Check> {
     return {
       name: 'api',
       ok: true,
-      detail: `${ctx.api.baseUrl} — ${list.map((runtime) => runtime.brain).join(', ')}`,
+      detail: `${ctx.api.baseUrl}: ${list.map((runtime) => runtime.brain).join(', ')}`,
     };
   } catch (err) {
     return { name: 'api', ok: false, detail: (err as Error).message };

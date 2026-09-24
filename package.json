@@ -1,7 +1,7 @@
 {
   "name": "agent-kit",
   "version": "0.1.0",
-  "description": "Build and deploy agents as an ordinary project — prompt, config, env and setup as files. Runs on Hermes or OpenClaw.",
+  "description": "Build and deploy agents as an ordinary project: prompt, config, env and setup as files. Runs on Hermes or OpenClaw.",
   "license": "MIT",
   "repository": {
     "type": "git",

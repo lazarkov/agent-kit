@@ -9,7 +9,7 @@ import type { RuntimeInfo } from '../types.js';
  *
  * This is the whole premise of the tool in one list: the same document deploys onto
  * any brain here, so a person choosing one wants to see what they are choosing
- * between — the pinned image, when it was last verified against upstream, and
+ * between: the pinned image, when it was last verified against upstream, and
  * whether upstream has moved since.
  */
 export async function runtimes(ctx: Context, _args: ParsedArgs): Promise<void> {

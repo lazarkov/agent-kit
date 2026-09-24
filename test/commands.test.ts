@@ -136,7 +136,7 @@ describe('explain', () => {
       expect(text).toContain('every 1d');
       expect(text).toContain('telegram:owner');
       // A job with no deliver goes to telegram, which is the platform's default and
-      // not the author's terminal — worth saying rather than leaving blank.
+      // not the author's terminal, which is worth saying rather than leaving blank.
       expect(text).toContain('every 30m → telegram');
       expect(text).toContain('runs sweep.sh, no model involved');
       // With a schedule, the "only when spoken to" line would be wrong.
@@ -405,7 +405,7 @@ describe('search', () => {
       'media-company',
     ]);
 
-    // The one hermes agent here is unverified, so the pair of filters excludes it —
+    // The one hermes agent here is unverified, so the pair of filters excludes it,
     // and the brain's value must not leak into the query to make that happen.
     const hermes = recordingIo();
     await run(['search', '--verified', '--brain', 'hermes', '--json'], {

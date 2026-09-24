@@ -17,7 +17,7 @@ export interface LoadedDocument {
 /**
  * Finds the document a command should act on.
  *
- * With an argument, that argument — a file, or a directory holding `agent.md`.
+ * With an argument, that argument: a file, or a directory holding `agent.md`.
  * Without one, `agent.md` in the working directory. No recursive search: a tool
  * that guesses which of two documents you meant is a tool you cannot trust with
  * `deploy`.

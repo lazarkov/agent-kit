@@ -33,7 +33,7 @@ export interface Toolset {
 
 export interface ScheduleJob {
   name?: string;
-  /** The runtime's own grammar — `30m`, `every 2h`, `1d`, or a raw cron expression. */
+  /** The runtime's own grammar: `30m`, `every 2h`, `1d`, or a raw cron expression. */
   every?: string;
   prompt?: string;
   /** A script under the profile's `scripts/`, run instead of prompting the model. */
@@ -44,7 +44,7 @@ export interface ScheduleJob {
   deliver?: string;
 }
 
-/** The answer from `POST /agents/blueprints/validate` — a preview, not the document. */
+/** The answer from `POST /agents/blueprints/validate`: a preview, not the document. */
 export interface BlueprintPreview {
   id: string;
   name: string;
@@ -57,7 +57,7 @@ export interface BlueprintPreview {
   config?: ConfigField[];
   /** Names only. Values are collected at deploy time, never read from here. */
   envKeys?: string[];
-  /** Paths only — the platform deliberately does not echo file bodies back. */
+  /** Paths only: the platform deliberately does not echo file bodies back. */
   files?: string[];
   setup?: string[];
   diagnostics?: string[];
@@ -69,7 +69,7 @@ export interface BlueprintPreview {
   toolsets?: Toolset[];
 }
 
-/** `GET /agents/blueprints/examples` — the platform's own templates, with source. */
+/** `GET /agents/blueprints/examples`: the platform's own examples, with source. */
 export interface BlueprintExample {
   slug: string;
   name: string;
@@ -79,7 +79,7 @@ export interface BlueprintExample {
   source: string;
 }
 
-/** `GET /agents/runtimes` — which container images a `brain:` resolves to. */
+/** `GET /agents/runtimes`: which container images a `brain:` resolves to. */
 export interface RuntimeInfo {
   brain: string;
   image: string;
@@ -101,7 +101,7 @@ export interface RuntimeInfo {
   } | null;
 }
 
-/** `POST /agents/llm-models` — a provider's catalogue, priced per token. */
+/** `POST /agents/llm-models`: a provider's catalogue, priced per token. */
 export interface LlmModel {
   id: string;
   label?: string;
@@ -117,7 +117,7 @@ export interface LlmModelsResponse {
   models: LlmModel[];
 }
 
-/** `GET /agents/types` — the published catalogue. */
+/** `GET /agents/types`: the published catalogue. */
 export interface AgentType {
   id: string;
   name: string;

@@ -1,7 +1,7 @@
 # Contributing
 
-This is meant to be contributed to. The interesting work is not in the CLI plumbing
-— it is in making one document deploy to one more place.
+This is meant to be contributed to. The interesting work is not in the CLI plumbing.
+It is in making one project deploy to one more place.
 
 ## Getting set up
 
@@ -25,7 +25,7 @@ did-you-mean. A copy out here would drift, and it would drift toward accepting
 documents the platform then refuses. Ask it: `POST /agents/blueprints/validate`.
 
 **Anonymous by default.** A command that only reads must not require an account.
-The platform's public routes — validate, examples, runtimes, llm-models, types —
+The platform's public routes (validate, examples, runtimes, llm-models, types)
 are public on purpose, and a login prompt in front of `agent validate` would be a
 worse tool for no gain. Login belongs in front of the commands that provision.
 
@@ -45,7 +45,7 @@ made about it in the pull request.
 ## Adding a command
 
 1. A module in `src/commands/`, exporting `(ctx, args) => Promise<void>`. `ctx`
-   carries `io`, `api`, `style`, `json`, `cwd` and `env` — take everything from
+   carries `io`, `api`, `style`, `json`, `cwd` and `env`. Take everything from
    there rather than reaching for `console` or `process`, which is what makes it
    testable.
 2. Register it in `COMMANDS` in `src/run.ts` and add a line to `src/help.ts`.
@@ -55,14 +55,14 @@ made about it in the pull request.
 
 ## Adding a runtime or a deploy target
 
-The premise of this package is that a document is portable and the runtime is a
+The premise of this package is that a project is portable and the runtime is a
 choice. Today `brain:` selects between Hermes and OpenClaw on the platform's side.
-If you want a third — or a deploy target that is not Agent Spaces at all — open an
+If you want a third, or a deploy target that is not Agent Spaces at all, open an
 issue first with the shape of the adapter you have in mind. The seam has to be
 designed once rather than three times.
 
 ## Pull requests
 
 Small, and with a reason in the message. `npm run check` green. If a change is
-about wording a user reads, quote the before and after — that is the product here
+about wording a user reads, quote the before and after: that is the product here
 as much as the code is.

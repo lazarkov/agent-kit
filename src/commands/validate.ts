@@ -37,8 +37,8 @@ export async function validate(ctx: Context, args: ParsedArgs): Promise<void> {
   const rows: [string, string][] = [
     ['id', preview.id],
     ['name', preview.name],
-    ['runtime', preview.brain ?? '—'],
-    ['model', String(preview.runtime?.['defaultModel'] ?? '—')],
+    ['runtime', preview.brain ?? '-'],
+    ['model', String(preview.runtime?.['defaultModel'] ?? '-')],
     ['wizard', `${preview.steps?.length ?? 0} step(s)`],
     ['config', `${preview.config?.length ?? 0} field(s)`],
     ['soul', `${preview.soulLines ?? 0} line(s)`],

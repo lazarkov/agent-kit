@@ -1,7 +1,7 @@
 /**
  * The one place this package touches a blueprint's text.
  *
- * It is not a parser — the platform owns parsing, and a second implementation here
+ * It is not a parser: the platform owns parsing, and a second implementation here
  * would drift from it. All this does is rewrite two frontmatter scalars so a
  * scaffolded document is named after the directory it landed in.
  */

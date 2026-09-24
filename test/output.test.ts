@@ -37,8 +37,8 @@ describe('formatPrice', () => {
   });
 
   it('shows an unpriced model as unknown rather than as free', () => {
-    expect(formatPrice(null)).toBe('—');
-    expect(formatPrice(undefined)).toBe('—');
+    expect(formatPrice(null)).toBe('-');
+    expect(formatPrice(undefined)).toBe('-');
   });
 });
 

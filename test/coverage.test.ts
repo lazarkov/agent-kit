@@ -22,7 +22,7 @@ const names = Object.keys(COMMANDS);
  * The guard against a command shipping quietly.
  *
  * Adding one to the table in `run.ts` is one line, and the two things easiest to
- * forget afterwards are a test and a line of help — which together are the whole
+ * forget afterwards are a test and a line of help, which together are the whole
  * difference between a feature and a surprise. Both are asserted here for every
  * command, so a new one fails the suite until it has both.
  */

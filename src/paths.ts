@@ -26,8 +26,8 @@ export function projectTemplateDir(): string {
 }
 
 /**
- * A blueprint id and a directory name are the same shape of thing — lower case,
- * dashes, no leading digit-only mush — so one function makes both.
+ * A blueprint id and a directory name are the same shape of thing (lower case,
+ * dashes, no leading digit-only mush) so one function makes both.
  */
 export function toBlueprintId(input: string): string {
   const slug = input

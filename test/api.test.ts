@@ -18,7 +18,9 @@ describe('ApiClient', () => {
         ),
     );
 
-    // Rewording this would lose the did-you-mean, which is the useful half.
+    // Transcribed from a live 400, em dash and all: this is the platform's wording, so
+    // tidying it here would only make the fixture stop matching what users will see.
+    // Rewording it would lose the did-you-mean, which is the useful half.
     await expect(client.post('/x', {})).rejects.toMatchObject({
       message: expect.stringContaining("did you mean '## Soul'"),
       code: 'BLUEPRINT_INVALID',
