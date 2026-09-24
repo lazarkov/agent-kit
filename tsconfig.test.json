@@ -1,0 +1,10 @@
+{
+  // The build compiles src alone; this one type-checks the tests against it, so a
+  // fixture that has drifted from a real response is a failure rather than a cast.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

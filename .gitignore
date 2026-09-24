@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Anything an agent project keeps locally. `agent init` writes the same two lines
+# into the project it scaffolds; they are here as well because this repository's
+# own fixtures and manual runs land in the same places.
+.env
+.env.local
+.agentspaces/
+
+# Internal planning document, deliberately not part of the open-source history.
+SCOPE.md
+
+.DS_Store

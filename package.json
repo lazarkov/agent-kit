@@ -1,0 +1,42 @@
+{
+  "name": "agent-kit",
+  "version": "0.1.0",
+  "description": "Build an agent in a directory and deploy it to Agent Spaces. One document, either runtime.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "bin": {
+    "agent-kit": "dist/cli.js",
+    "agent": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run typecheck && npm test",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "agent",
+    "agents",
+    "hermes",
+    "openclaw",
+    "cli",
+    "deploy",
+    "agent-spaces"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.3"
+  }
+}
