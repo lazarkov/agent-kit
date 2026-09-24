@@ -117,7 +117,10 @@ describe('explain', () => {
               ...PREVIEW.data,
               files: ['notes/README.md'],
               setup: ['mkdir -p notes'],
-              schedule: [{ name: 'morning', cron: '0 7 * * *', deliver: 'telegram:owner' }],
+              schedule: [
+                { name: 'morning', every: '1d', deliver: 'telegram:owner', prompt: 'read the news' },
+                { name: 'sweep', every: '30m', script: 'sweep.sh', noAgent: true },
+              ],
             },
           },
         },
@@ -130,7 +133,12 @@ describe('explain', () => {
       expect(text).toContain('notes/README.md');
       expect(text).toContain('mkdir -p notes');
       expect(text).toContain('morning');
+      expect(text).toContain('every 1d');
       expect(text).toContain('telegram:owner');
+      // A job with no deliver goes to telegram, which is the platform's default and
+      // not the author's terminal — worth saying rather than leaving blank.
+      expect(text).toContain('every 30m → telegram');
+      expect(text).toContain('runs sweep.sh, no model involved');
       // With a schedule, the "only when spoken to" line would be wrong.
       expect(text).not.toContain('acts when it is spoken to');
     });

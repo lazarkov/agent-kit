@@ -33,9 +33,15 @@ export interface Toolset {
 
 export interface ScheduleJob {
   name?: string;
-  cron?: string;
-  deliver?: string;
+  /** The runtime's own grammar — `30m`, `every 2h`, `1d`, or a raw cron expression. */
+  every?: string;
   prompt?: string;
+  /** A script under the profile's `scripts/`, run instead of prompting the model. */
+  script?: string;
+  /** With a script, skip the model entirely and deliver its stdout verbatim. */
+  noAgent?: boolean;
+  /** `origin`, `local`, `telegram`, or `platform:chat_id`. Defaults to telegram. */
+  deliver?: string;
 }
 
 /** The answer from `POST /agents/blueprints/validate` — a preview, not the document. */

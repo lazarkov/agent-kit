@@ -58,7 +58,10 @@ export async function validate(ctx: Context, args: ParsedArgs): Promise<void> {
     rows.push(['setup', `${preview.setup.length} command(s)`]);
   }
   if (preview.schedule && preview.schedule.length > 0) {
-    rows.push(['schedule', preview.schedule.map((job) => job.name ?? job.cron ?? '?').join(', ')]);
+    rows.push([
+      'schedule',
+      preview.schedule.map((job) => job.name ?? job.every ?? '?').join(', '),
+    ]);
   }
   if (preview.diagnostics && preview.diagnostics.length > 0) {
     rows.push(['diagnostics', `${preview.diagnostics.length} check(s)`]);

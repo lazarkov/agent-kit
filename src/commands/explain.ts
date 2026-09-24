@@ -106,7 +106,14 @@ export async function explain(ctx: Context, args: ParsedArgs): Promise<void> {
   if (schedule.length > 0) {
     io.out(section(style, 'What it does on its own'));
     for (const job of schedule) {
-      io.out(`  ${job.name ?? 'job'} ${style.dim(`${job.cron ?? ''} → ${job.deliver ?? 'origin'}`)}`);
+      // `deliver` defaults to telegram on the platform, not to the caller — an agent
+      // whose nightly report goes somewhere the author did not expect is the failure
+      // this line is here to prevent.
+      const how = job.noAgent
+        ? `runs ${job.script ?? 'a script'}, no model involved`
+        : (job.script ?? 'prompts the model');
+      io.out(`  ${job.name ?? 'job'} ${style.dim(`every ${job.every ?? '?'} → ${job.deliver ?? 'telegram'}`)}`);
+      io.out(`    ${style.dim(how)}`);
     }
     io.out('');
   }
