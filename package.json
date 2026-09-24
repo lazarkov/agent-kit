@@ -1,8 +1,16 @@
 {
   "name": "agent-kit",
   "version": "0.1.0",
-  "description": "Build an agent in a directory and deploy it to Agent Spaces. One document, either runtime.",
+  "description": "Build and deploy agents as an ordinary project — prompt, config, env and setup as files. Runs on Hermes or OpenClaw.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lazarkov/agent-kit.git"
+  },
+  "homepage": "https://github.com/lazarkov/agent-kit#readme",
+  "bugs": {
+    "url": "https://github.com/lazarkov/agent-kit/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=20.11"
