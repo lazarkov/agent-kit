@@ -24,7 +24,15 @@ const ALIASES: Readonly<Record<string, string>> = {
 };
 
 /** Flags that always take a value, so `--api https://…` does not read as boolean. */
-const VALUE_FLAGS = new Set(['api', 'template', 'provider', 'key', 'file']);
+const VALUE_FLAGS = new Set([
+  'api',
+  'template',
+  'provider',
+  'key',
+  'file',
+  'category',
+  'brain',
+]);
 
 export function parseArgs(argv: readonly string[]): ParsedArgs {
   const positionals: string[] = [];

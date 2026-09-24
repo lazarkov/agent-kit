@@ -21,7 +21,8 @@ import { packageRoot } from './paths.js';
 
 type Command = (ctx: Context, args: ParsedArgs) => Promise<void>;
 
-const COMMANDS: Record<string, Command> = {
+/** Exported so a test can insist every command here is documented and exercised. */
+export const COMMANDS: Record<string, Command> = {
   init,
   validate,
   explain,

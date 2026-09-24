@@ -26,6 +26,25 @@ describe('parseArgs', () => {
     expect(args.positionals).toEqual(['billing']);
   });
 
+  it('knows which flags take a value, so the value is not read as a search term', () => {
+    // Every value flag any command reads has to be declared here. When --category was
+    // missing from that set, `search --category productivity` searched for the word
+    // 'productivity' and applied no filter at all.
+    for (const [flag, value] of [
+      ['--category', 'productivity'],
+      ['--brain', 'openclaw'],
+      ['--provider', 'anthropic'],
+      ['--key', 'abc'],
+      ['--template', '01-minimal'],
+      ['--file', 'other.md'],
+      ['--api', 'http://localhost:3001/api'],
+    ] as const) {
+      const args = parseArgs(['search', flag, value]);
+      expect(stringFlag(args, flag.slice(2)), flag).toBe(value);
+      expect(args.positionals, flag).toEqual([]);
+    }
+  });
+
   it('turns a flag off with --no-', () => {
     expect(parseArgs(['search', '--no-color']).flags.get('color')).toBe(false);
     expect(boolFlag(parseArgs(['search', '--no-color']), 'color', true)).toBe(false);

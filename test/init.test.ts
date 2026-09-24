@@ -93,6 +93,19 @@ describe('init', () => {
     });
   });
 
+  it('reports the path and id it chose under --json', async () => {
+    await withTempDir(async (dir) => {
+      const io = recordingIo();
+      await run(['init', 'notes', '--json'], { io, cwd: dir, tty: false, env: {} });
+
+      expect(JSON.parse(io.text())).toMatchObject({
+        path: join(dir, 'notes', 'agent.md'),
+        id: 'notes',
+        template: 'starter template',
+      });
+    });
+  });
+
   it('lists the templates it does have when asked for one it does not', async () => {
     await withTempDir(async (dir) => {
       const { client } = fakeApi({ '/agents/blueprints/examples': { body: EXAMPLES } });
