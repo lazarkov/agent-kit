@@ -53,7 +53,41 @@ placeholders they are filled from, like `{{llmKeyVar}}={{llmApiKey}}`, which res
 when someone deploys the agent. Real keys are typed into the wizard and stored
 encrypted, and never belong in the project.
 
-## What is in this release
+## Where agent-kit sits
+
+It is the authoring end, and only that. It does not run your agent and does not host
+it. The thing that runs is a container on a server somewhere, with either Hermes or
+OpenClaw inside it as the brain, and `config.yaml` is where you say which. What
+agent-kit does is turn a directory into the one document a host will take, and tell
+you what that host makes of it before you pay for anything.
+
+Today there is one host that takes it, Agent Spaces. The format is not private to
+them and neither is this tool, so another target is a matter of another
+implementation rather than another project layout: the same directory, built the same
+way, pointed somewhere else. That is the direction, and it is the part most worth
+contributing to.
+
+```
+   your own project                     agent init --template <slug>
+   agent.yaml, soul.md,                 one of the platform's worked
+   config.yaml, .env, files/            examples, as a single document
+              \                                    /
+               \                                  /
+                agent build  /  validate  /  explain
+                               |
+                     one document a host takes
+                               |
+                     +---------+----------+
+                     |                    |
+              Agent Spaces          another host
+              (works today)         (planned)
+                     |
+         a container on a server of its own,
+         running Hermes or OpenClaw as config.yaml says,
+         with your files, your environment and your soul in it
+```
+
+## Commands
 
 Everything here works without an account, because none of it costs anyone a server:
 
@@ -102,18 +136,9 @@ Every file goes in verbatim, `.env` aside, which becomes the YAML pairs that sec
 expects. That is deliberate: it means an error the platform reports is an error in
 text you actually wrote.
 
-## Why there is no parser in here
-
-The blueprint format belongs to the backend, which validates it section by section
-and answers with the section it objected to and the likely fix. A second
-implementation out here would drift within a release, and it would drift in the worst
-direction, passing agents the platform then refuses. So `validate` and `explain` ask,
-and print what they are told.
-
-That is also why they need the network while `init` and `build` do not. It is also
-why `--template` writes a single document rather than a project: taking an example
-apart again would need exactly the parser this package does not have. Every command
-accepts either shape.
+A template arrives as one of these documents rather than as a project, and every
+command takes either shape, so `validate`, `explain` and the rest read a template the
+same way they read a directory.
 
 ## Contributing
 
