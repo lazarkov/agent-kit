@@ -68,10 +68,11 @@ export async function localRun(ctx: Context, args: ParsedArgs): Promise<void> {
   const manifest = readFileSync(join(dir, MANIFEST), 'utf8');
   const brain = readScalar(manifest, 'brain') ?? 'hermes';
   const id = readScalar(manifest, 'id') ?? toBlueprintId(basename(dir));
-  const runtime = localRuntime(brain);
   const name = containerName(id);
   const shell: Shell = ctx.shell ?? dockerShell;
 
+  // Before the brain is resolved, because a container you cannot name a runtime for is
+  // exactly the one you most want to be able to remove.
   if (boolFlag(args, 'down')) {
     const removed = await removeContainer(shell, name);
     if (ctx.json) return jsonOut(ctx.io, { container: name, removed });
@@ -79,6 +80,7 @@ export async function localRun(ctx: Context, args: ParsedArgs): Promise<void> {
     return;
   }
 
+  const runtime = localRuntime(brain);
   const image = stringFlag(args, 'image') ?? (await pinnedImage(ctx, brain));
 
   // Rebuilt rather than reused, because the question a local run answers is whether a

@@ -202,7 +202,9 @@ export interface Container {
 
 /** `running`, `exited`, or null when there is no such container. */
 export async function containerState(shell: Shell, name: string): Promise<string | null> {
-  const result = await shell(['inspect', '--format', '{{.State.Status}}', name]);
+  // `container inspect` rather than `inspect`, which also resolves image names and
+  // would answer about an image that happened to share the name.
+  const result = await shell(['container', 'inspect', '--format', '{{.State.Status}}', name]);
   return result.code === 0 ? result.stdout.trim() : null;
 }
 
@@ -233,11 +235,47 @@ export async function startContainer(
   }
 }
 
-/** Who the agent is inside its container, read off the directory it owns. */
+const ROOT = '0:0';
+
+/**
+ * Who the agent is inside its container, read off the directory it owns.
+ *
+ * Read twice, because this exact question is what took a deploy down once: the image's
+ * own init chowns that directory from a service that runs alongside us, so a single
+ * early read can answer root, and everything written afterwards is then chowned to
+ * root and unreadable by the agent. Two agreeing reads mean it has stopped changing
+ * hands. A directory that stays root's is legal, so that is waited on and then
+ * accepted rather than refused; one that cannot be read at all is not, because
+ * guessing root there is how the failure happens in the first place.
+ */
 export async function userOf(shell: Shell, name: string, home: string): Promise<string> {
-  const found = await shell(['exec', name, 'stat', '-c', '%u:%g', home]);
-  const value = found.stdout.trim();
-  return found.code === 0 && /^\d+:\d+$/.test(value) ? value : '0:0';
+  let last = '';
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const found = await shell(['exec', name, 'stat', '-c', '%u:%g', home]);
+    const value = found.code === 0 ? found.stdout.trim() : '';
+    if (/^\d+:\d+$/.test(value)) {
+      if (value === last && value !== ROOT) return value;
+      last = value;
+      // No wait before confirming a settled answer: an exec is itself a gap, and this
+      // runs on every local run. The waiting below is for when there is a reason.
+      if (value !== ROOT) continue;
+    } else {
+      last = '';
+    }
+    await pause(250);
+  }
+
+  if (last === '') {
+    throw new CliError(`Could not tell who owns ${home} in the container.`, {
+      hint: 'The image may have changed. Run `agent runtimes` to see which release is verified.',
+    });
+  }
+  return last;
+}
+
+/** Only ever waited on while a container's own init is still moving underneath us. */
+function pause(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -294,35 +332,56 @@ export async function writeFile(
     throw new CliError(`Could not write ${path}: ${firstLine(written.stderr)}`);
   }
 
+  // The owner settled on once, rather than stat'd again per file: a second reading can
+  // differ from the first while the image's init is still running, and then the files
+  // are owned by one user while the commands below run as another.
   const target = dir.startsWith(`${container.home}/`) ? dir : path;
-  await shell([
-    'exec',
-    container.name,
-    'sh',
-    '-c',
-    `owner=$(stat -c %u:%g ${quote(container.home)}) && chown -R "$owner" ${quote(target)}`,
-  ]);
+  await shell(['exec', container.name, 'chown', '-R', container.user, target]);
 }
+
+/**
+ * The environment, read the way the runtime reads it rather than executed.
+ *
+ * `.env` has to reach a setup script and a test somehow, and the obvious way, sourcing
+ * it, is wrong in three ways that all pass silently. `TEAM_NAME=Platform Engineering`
+ * makes the variable *empty* and prints a stray `Engineering: not found`; a value
+ * containing `$OTHER` gets expanded; and `$(...)` in a value would simply run. The
+ * runtime uses a dotenv reader, which does none of that, and the whole point of a local
+ * run is that the command sees what the agent sees. So the file is parsed: each line
+ * split at the first `=`, one layer of surrounding quotes removed the way dotenv
+ * removes it, and the pair handed to `export` as a single word.
+ */
+const READ_ENV: readonly string[] = [
+  'if [ -r .env ]; then',
+  '  while IFS= read -r line || [ -n "$line" ]; do',
+  "    case \"$line\" in ''|'#'*) continue ;; *=*) ;; *) continue ;; esac",
+  '    name=${line%%=*}',
+  '    value=${line#*=}',
+  '    case "$value" in',
+  '      \'"\'*\'"\') value=${value#\'"\'}; value=${value%\'"\'} ;;',
+  '      "\'"*"\'") value=${value#"\'"}; value=${value%"\'"} ;;',
+  '    esac',
+  '    export "$name=$value"',
+  '  done < .env',
+  'fi',
+];
 
 /**
  * Run a command as the agent, with the agent's environment, from the agent's home.
  *
- * All three matter and each one has been the difference between a test that passes
- * and an agent that works. `--user` because a file the agent cannot read is the
- * failure this whole module is careful about, and a check run as root would not see
- * it. The `.env` sourced explicitly because that file is a file, not a shell: the
- * runtime reads it for itself, so a command run beside the runtime gets nothing from
- * it unless it reads it too, and a variable missing here looks exactly like a
- * variable that was never set.
+ * All three matter. `--user` because a file the agent cannot read is the failure this
+ * whole module is careful about, and a check run as root would not see it. The home
+ * directory because that is where a project's own paths are relative to. The
+ * environment because `.env` is a file the runtime reads for itself, so a command run
+ * beside the runtime gets nothing from it unless it reads it too, and a variable
+ * missing here looks exactly like a variable that was never set.
  */
 export async function runAsAgent(
   shell: Shell,
   container: Container,
   command: string,
 ): Promise<ShellResult> {
-  const preamble =
-    `cd ${quote(container.home)}\n` +
-    `if [ -r .env ]; then set -a; . ./.env; set +a; fi\n`;
+  const preamble = [`cd ${quote(container.home)}`, ...READ_ENV, ''].join('\n');
   return shell([
     'exec',
     '--user',
@@ -332,6 +391,11 @@ export async function runAsAgent(
     '-c',
     preamble + command,
   ]);
+}
+
+/** Exported for a test that runs it against a real `sh`, which is the only proof. */
+export function readEnvScript(): string {
+  return READ_ENV.join('\n');
 }
 
 export async function removeContainer(shell: Shell, name: string): Promise<boolean> {

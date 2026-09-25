@@ -1,9 +1,10 @@
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { answersFrom, resolvePlaceholders, toCamelCase } from '../src/local.js';
+import { answersFrom, readEnvScript, resolvePlaceholders, toCamelCase } from '../src/local.js';
 import type { Shell, ShellResult } from '../src/local.js';
 import { run } from '../src/run.js';
 import { fakeApi, recordingIo, withTempDir } from './helpers.js';
@@ -188,9 +189,11 @@ describe('run', () => {
       });
 
       expect(io.text()).toContain('timeout 30 /opt/data/scripts/log.sh --selftest');
-      // Sourced explicitly, because .env is a file and not a shell: a command run
-      // beside the runtime gets nothing from it otherwise.
-      expect(docker.lines.join('\n')).toContain('set -a; . ./.env');
+      // The environment comes with it, because .env is a file the runtime reads for
+      // itself and a command run beside the runtime gets nothing from it otherwise.
+      expect(docker.lines.join('\n')).toContain('done < .env');
+      // Read, never sourced. See the suite below for why that distinction matters.
+      expect(docker.lines.join('\n')).not.toContain('. ./.env');
     });
   });
 
@@ -352,6 +355,73 @@ describe('run', () => {
       expect(report.unanswered).toEqual(['llmApiKey']);
       expect(report.setup.code).toBe(0);
       expect(report.test.command).toContain('/opt/data/scripts/log.sh');
+    });
+  });
+});
+
+/**
+ * The one thing a fake Docker cannot check: whether the shell this module writes is
+ * correct shell. It is POSIX sh either way, so it runs here.
+ */
+describe('the environment a command is given', () => {
+  const load = (dir: string, env: string, print: string): string => {
+    writeFileSync(join(dir, '.env'), env, 'utf8');
+    return execFileSync('sh', ['-c', `${readEnvScript()}\n${print}`], {
+      cwd: dir,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+  };
+
+  it('keeps a value with a space in it, which sourcing the file silently empties', async () => {
+    await withTempDir(async (dir) => {
+      // Sourcing `TEAM_NAME=Platform Engineering` leaves TEAM_NAME empty and prints
+      // `Engineering: not found`, while the runtime's own reader gets both words. That
+      // divergence is the opposite of what a local run is for.
+      expect(load(dir, 'TEAM_NAME=Platform Engineering\n', 'echo "[$TEAM_NAME]"')).toBe(
+        '[Platform Engineering]',
+      );
+    });
+  });
+
+  it('leaves a value alone rather than expanding it, the way dotenv does', async () => {
+    await withTempDir(async (dir) => {
+      // A key or a password with a `$` in it is ordinary, and sourcing eats it.
+      expect(load(dir, 'SECRET=a$NOT_SET-b\n', 'echo "[$SECRET]"')).toBe('[a$NOT_SET-b]');
+    });
+  });
+
+  it('takes one layer of surrounding quotes off, also the way dotenv does', async () => {
+    await withTempDir(async (dir) => {
+      const out = load(
+        dir,
+        'DOUBLE="two words"\nSINGLE=\'two words\'\nINNER=say "hi"\n',
+        'echo "[$DOUBLE][$SINGLE][$INNER]"',
+      );
+      expect(out).toBe('[two words][two words][say "hi"]');
+    });
+  });
+
+  it('skips comments, blanks and anything that is not a pair', async () => {
+    await withTempDir(async (dir) => {
+      expect(load(dir, '# a note\n\nnot a pair\nKEY=value\n', 'echo "[$KEY]"')).toBe('[value]');
+    });
+  });
+
+  it('reads a last line that has no newline after it', async () => {
+    await withTempDir(async (dir) => {
+      expect(load(dir, 'KEY=value', 'echo "[$KEY]"')).toBe('[value]');
+    });
+  });
+
+  it('does nothing at all when there is no environment file', async () => {
+    await withTempDir(async (dir) => {
+      expect(
+        execFileSync('sh', ['-c', `${readEnvScript()}\necho done`], {
+          cwd: dir,
+          encoding: 'utf8',
+        }).trim(),
+      ).toBe('done');
     });
   });
 });
