@@ -68,23 +68,40 @@ way, pointed somewhere else. That is the direction, and it is the part most wort
 contributing to.
 
 ```
-   your own project                     agent init --template <slug>
-   agent.yaml, soul.md,                 one of the platform's worked
-   config.yaml, .env, files/            examples, as a single document
-              \                                    /
-               \                                  /
-                agent build  /  validate  /  explain
-                               |
-                     one document a host takes
-                               |
-                     +---------+----------+
-                     |                    |
-              Agent Spaces          another host
-              (works today)         (planned)
-                     |
-         a container on a server of its own,
-         running Hermes or OpenClaw as config.yaml says,
-         with your files, your environment and your soul in it
+┌──────────────────────────────┐   ┌──────────────────────────────┐
+│ your own project             │   │ or a template                │
+│                              │   │                              │
+│ agent.yaml    soul.md        │   │ agent init --template <slug> │
+│ config.yaml   .env           │   │ is one of the platform's     │
+│ fields.yaml   files/         │   │ examples, as one document    │
+└──────────────┬───────────────┘   └───────────────┬──────────────┘
+               │                                   │
+               └─────────────────┬─────────────────┘
+                                 │
+                 ┌───────────────┴───────────────┐
+                 │ agent-kit                     │
+                 │                               │
+                 │ build     one document        │
+                 │ validate  what a host makes   │
+                 │ explain   of it, before you   │
+                 │           pay for anything    │
+                 └───────────────┬───────────────┘
+                                 │
+              ┌──────────────────┴──────────────────┐
+              │                                     │
+   ┌──────────┴───────────┐            ┌────────────┴─────────────┐
+   │ Agent Spaces         │            │ somewhere else           │
+   │ the host that takes  │            │ planned: same project,   │
+   │ it today             │            │ another target           │
+   └──────────┬───────────┘            └──────────────────────────┘
+              │
+   ┌──────────┴───────────────────────────────────┐
+   │ a container on a server of its own           │
+   │                                              │
+   │ Hermes or OpenClaw, whichever config.yaml    │
+   │ names, with your files, your environment     │
+   │ and your soul inside it                      │
+   └──────────────────────────────────────────────┘
 ```
 
 ## Commands
