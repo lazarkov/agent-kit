@@ -74,34 +74,30 @@ contributing to.
 │ agent.yaml    soul.md        │   │ agent init --template <slug> │
 │ config.yaml   .env           │   │ is one of the platform's     │
 │ fields.yaml   files/         │   │ examples, as one document    │
-└──────────────┬───────────────┘   └───────────────┬──────────────┘
-               │                                   │
-               └─────────────────┬─────────────────┘
-                                 │
+└──────────────┬───────────────┘   └──────────────┬───────────────┘
+               └─────────────────┬────────────────┘
                  ┌───────────────┴───────────────┐
                  │ agent-kit                     │
                  │                               │
                  │ build     one document        │
                  │ validate  what a host makes   │
-                 │ explain   of it, before you   │
-                 │           pay for anything    │
+                 │ explain   of it, up front     │
                  └───────────────┬───────────────┘
-                                 │
               ┌──────────────────┴──────────────────┐
-              │                                     │
    ┌──────────┴───────────┐            ┌────────────┴─────────────┐
    │ Agent Spaces         │            │ somewhere else           │
    │ the host that takes  │            │ planned: same project,   │
    │ it today             │            │ another target           │
    └──────────┬───────────┘            └──────────────────────────┘
-              │
-   ┌──────────┴───────────────────────────────────┐
-   │ a container on a server of its own           │
-   │                                              │
-   │ Hermes or OpenClaw, whichever config.yaml    │
-   │ names, with your files, your environment     │
-   │ and your soul inside it                      │
-   └──────────────────────────────────────────────┘
+   ┌──────────┴────────────────────────────────────┐
+   │ a container on a server of its own            │
+   │ your files, your environment, your soul       │
+   └──────────────────────┬────────────────────────┘
+          ┌───────────────┴───────────────┐
+   ┌──────┴─────────────┐    ┌────────────┴───────┐
+   │ Hermes             │    │ OpenClaw           │
+   │ brain: hermes      │    │ brain: openclaw    │
+   └────────────────────┘    └────────────────────┘
 ```
 
 ## Commands
