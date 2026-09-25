@@ -1,13 +1,18 @@
 # agent-kit
 
-Build an agent as an ordinary project, and deploy it to
-[Agent Spaces](https://eu.agentspaces.app).
+A tool for building an agent, reusing someone else's, or changing one you already
+have, and then deploying it to the cloud. Open source throughout, agents included.
 
 An agent is a prompt, a runtime config, an environment, a setup script and whatever
-files it needs on the box. Those are separate concerns, so they are separate files,
-in a directory you can diff, review and put in git. The same project runs on either
-runtime the platform supports, so choosing between Hermes and OpenClaw is one line
-of config rather than a rewrite.
+files it needs on the box. Those are separate concerns, so they are separate files, in
+a directory you can diff, review and put in git.
+
+The agent itself runs on an open source runtime, [Hermes](https://github.com/nousresearch/hermes-agent)
+or [OpenClaw](https://github.com/openclaw/openclaw), and more can be added. Which one
+is one line in `config.yaml`, so moving an agent from Hermes to OpenClaw or back is an
+edit rather than a rewrite. Deployment is the same story: today the cloud that takes
+these agents is [Agent Spaces](https://eu.agentspaces.app), and another deploy target
+can be added without changing the project.
 
 ```bash
 npm install -g agent-kit
@@ -53,19 +58,19 @@ placeholders they are filled from, like `{{llmKeyVar}}={{llmApiKey}}`, which res
 when someone deploys the agent. Real keys are typed into the wizard and stored
 encrypted, and never belong in the project.
 
-## Where agent-kit sits
+## Architecture
 
-It is the authoring end, and only that. It does not run your agent and does not host
-it. The thing that runs is a container on a server somewhere, with either Hermes or
-OpenClaw inside it as the brain, and `config.yaml` is where you say which. What
-agent-kit does is turn a directory into the one document a host will take, and tell
-you what that host makes of it before you pay for anything.
+Four layers, and you can change any one of them without touching the others.
 
-Today there is one host that takes it, Agent Spaces. The format is not private to
-them and neither is this tool, so another target is a matter of another
-implementation rather than another project layout: the same directory, built the same
-way, pointed somewhere else. That is the direction, and it is the part most worth
-contributing to.
+1. **Your project.** A directory of files. Start it from scratch, or start from a
+   template, or open one you already have.
+2. **agent-kit.** Builds the project into the single document a cloud accepts, and
+   asks the cloud what it makes of that document before anything is provisioned.
+3. **The cloud.** Provisions a server, puts your agent in a container on it, and runs
+   it. Agent Spaces today, and the interface is small enough that another one is a
+   matter of another implementation.
+4. **The runtime.** Hermes or OpenClaw, inside that container, doing the thinking.
+   `brain:` in `config.yaml` picks it.
 
 ```
 ┌──────────────────────────────┐   ┌──────────────────────────────┐
@@ -80,13 +85,13 @@ contributing to.
                  │ agent-kit                     │
                  │                               │
                  │ build     one document        │
-                 │ validate  what a host makes   │
+                 │ validate  what a cloud makes  │
                  │ explain   of it, up front     │
                  └───────────────┬───────────────┘
               ┌──────────────────┴──────────────────┐
    ┌──────────┴───────────┐            ┌────────────┴─────────────┐
    │ Agent Spaces         │            │ somewhere else           │
-   │ the host that takes  │            │ planned: same project,   │
+   │ the cloud that takes │            │ planned: same project,   │
    │ it today             │            │ another target           │
    └──────────┬───────────┘            └──────────────────────────┘
    ┌──────────┴────────────────────────────────────┐
@@ -102,56 +107,29 @@ contributing to.
 
 ## Commands
 
-Everything here works without an account, because none of it costs anyone a server:
+`Login` is whether the command needs an account. Nothing in this release does, because
+none of it provisions a server.
 
-| Command | What it does |
-| --- | --- |
-| `agent init [dir]` | Scaffold a project. Offline: the scaffold ships in the package. |
-| `agent init [dir] --template <slug>` | Start from one of the platform's worked examples instead. |
-| `agent build [dir]` | Compile the project to the one document the API takes. `--emit` prints it. |
-| `agent validate [dir]` | Have the platform read it and report the agent it describes. |
-| `agent explain [dir]` | The long form: the wizard, the environment keys, the toolsets, the soul. |
-| `agent templates` | The platform's examples, each adding one part of the format to the last. |
-| `agent runtimes` | Which container image each `brain:` resolves to, and what was verified when. |
-| `agent models --provider <p>` | A provider's catalogue, cheapest first, with tool support marked. |
-| `agent search [query]` | The published catalogue. `--verified`, `--brain`, `--category`. |
-| `agent doctor` | Node, reachability, and whether the project in this directory is valid. |
+| Command | What it does | Login |
+| --- | --- | --- |
+| `agent init [dir]` | Scaffold a project. Works offline: the scaffold ships in the package. | no |
+| `agent init [dir] --template <slug>` | Start from one of the platform's worked examples instead. | no |
+| `agent build [dir]` | Compile the project to the one document a cloud takes, at `.agentspaces/agent.md`. `--emit` prints it instead. | no |
+| `agent validate [dir]` | Have the platform read it and report the agent it describes. | no |
+| `agent explain [dir]` | The long form: the wizard, the environment keys, the toolsets, the soul. | no |
+| `agent templates` | The platform's examples, each adding one part of the format to the last. | no |
+| `agent runtimes` | Which container image each `brain:` resolves to, and what was verified when. | no |
+| `agent models --provider <p>` | A provider's catalogue, cheapest first, with tool support marked. | no |
+| `agent search [query]` | The published catalogue. `--verified`, `--brain`, `--category`. | no |
+| `agent doctor` | Node, reachability, and whether the project in this directory is valid. | no |
+| `deploy`, `list`, `logs`, `chat`, `start`, `stop` | Not here yet. They provision or talk to a running container, so they spend money on a server and have to know whose. Deploy through the web app meanwhile, and give it what `agent build` wrote. | yes |
 
 Options: `--json` for machine-readable output, `--api <url>` (or `AGENTSPACES_API`)
 to point at another backend, `--no-color` (`NO_COLOR` is honoured too). Exit codes
 are `0`, `1` for a failure and `2` for a command line that did not parse.
 
-## Where the login line falls
-
-Reading is anonymous. Spending is not.
-
-- **No account, no network.** `init` and `build`.
-- **No account, network.** `validate`, `explain`, `templates`, `runtimes`,
-  `models`, `search`, `doctor`. All of these are public reads on the platform.
-- **Account required, and not yet in this release.** `deploy`, `list`, `logs`,
-  `chat`, `start`/`stop`, and anything else that provisions or talks to a running
-  container. Those spend money on a server, so they need to know whose money.
-
-Deploying from the terminal needs a credential the platform does not issue yet: its
-API accepts a Firebase ID token and nothing else, which is a browser's artefact
-rather than a CLI's. Until that exists, deploy through the web app. `agent build`
-leaves the document it wants at `.agentspaces/agent.md`.
-
-## What build produces, and why you can ignore it
-
-The platform's API takes one document, so the project is concatenated into one before
-it is sent: `agent.yaml` becomes the frontmatter, `soul.md` becomes `## Soul`,
-`config.yaml` becomes `## Runtime`, and so on down the list. It is a build artefact,
-it goes in `.agentspaces/` which `init` gitignores, and nothing reads it back. Run
-`agent build --emit` when you want to see exactly what the platform was given.
-
-Every file goes in verbatim, `.env` aside, which becomes the YAML pairs that section
-expects. That is deliberate: it means an error the platform reports is an error in
-text you actually wrote.
-
-A template arrives as one of these documents rather than as a project, and every
-command takes either shape, so `validate`, `explain` and the rest read a template the
-same way they read a directory.
+Everything takes either shape, a project directory or a single document, so a template
+is read the same way a directory is.
 
 ## Contributing
 
