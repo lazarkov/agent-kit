@@ -68,6 +68,19 @@ describe('the vendored scaffold', () => {
     expect(values.length).toBeGreaterThan(0);
     for (const value of values) expect(value).toContain('{{');
   });
+
+  it('can be deployed on the built-in provider without editing anything', () => {
+    // Both of these were found by deploying the scaffold for real. Without `requesty`
+    // in the enum the platform refuses the config, and without the base URL the minted
+    // key lands in OPENAI_API_KEY and every model call 401s against OpenAI itself. The
+    // default path through this scaffold is the one nobody else will debug for you.
+    expect(readFileSync(join(root, 'fields.yaml'), 'utf8')).toMatch(
+      /enumValues:.*\brequesty\b/,
+    );
+    expect(readFileSync(join(root, 'env'), 'utf8')).toContain(
+      'OPENAI_BASE_URL={{llmBaseUrl}}',
+    );
+  });
 });
 
 describe('rewriteFrontmatter', () => {

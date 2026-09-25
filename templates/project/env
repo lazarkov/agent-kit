@@ -10,3 +10,9 @@ LLM_MODEL={{llmModel | defaultModel}}
 # The variable name is templated too, so the key lands under whichever name the
 # provider that was chosen actually reads.
 {{llmKeyVar}}={{llmApiKey}}
+
+# Leave this in. On the built-in provider the key lands in OPENAI_API_KEY, and
+# without a base URL the runtime sends it to OpenAI itself and gets a 401. It
+# resolves to empty for every other provider, and an empty value is dropped rather
+# than written, so it does nothing when it is not needed.
+OPENAI_BASE_URL={{llmBaseUrl}}

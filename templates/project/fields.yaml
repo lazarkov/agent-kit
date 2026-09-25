@@ -8,7 +8,10 @@
   label: LLM Provider
   type: enum
   required: true
-  enumValues: [openrouter, anthropic, openai, ollama-cloud]
+  # `requesty` is the built-in provider and wants no key: the platform mints one
+  # against the deployer's own credit, and its free models cost them nothing. Leave it
+  # first, or someone has to bring a key to try your agent at all.
+  enumValues: [requesty, openrouter, anthropic, openai, ollama-cloud]
 - key: llmApiKey
   label: LLM API Key
   type: string
