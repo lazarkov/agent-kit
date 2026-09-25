@@ -186,13 +186,24 @@ export function loadSource(cwd: string, target?: string | null): LoadedSource {
   return { source: document.source, path: document.path, kind: 'document', inputs: [] };
 }
 
-interface DeclaredFile {
+export interface DeclaredFile {
   /** Path under `files/`, with forward slashes. */
   relative: string;
   /** The path it lands on in the container. */
   containerPath: string;
   contents: string;
   when: string | null;
+}
+
+/**
+ * The files under `files/`, as the document would declare them.
+ *
+ * Exported because a local run has to place the same files in the same places, and
+ * reading the directory a second time somewhere else is how the two would disagree
+ * about what `files/home/` means.
+ */
+export function declaredFiles(dir: string): DeclaredFile[] {
+  return readFilesDir(dir);
 }
 
 function readFilesDir(dir: string): DeclaredFile[] {

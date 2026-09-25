@@ -9,6 +9,7 @@ import { doctor } from './commands/doctor.js';
 import { explain } from './commands/explain.js';
 import { init } from './commands/init.js';
 import { models } from './commands/models.js';
+import { localRun } from './commands/run.js';
 import { runtimes } from './commands/runtimes.js';
 import { search } from './commands/search.js';
 import { templates } from './commands/templates.js';
@@ -16,6 +17,7 @@ import { validate } from './commands/validate.js';
 import type { Context } from './context.js';
 import { CliError, UsageError } from './errors.js';
 import { printHelp } from './help.js';
+import type { Shell } from './local.js';
 import { consoleIo, shouldColor, Style } from './output.js';
 import type { Io } from './output.js';
 import { packageRoot } from './paths.js';
@@ -28,6 +30,8 @@ export const COMMANDS: Record<string, Command> = {
   build,
   validate,
   explain,
+  // Named `localRun` at its definition because `run` here is the CLI itself.
+  run: localRun,
   templates,
   runtimes,
   models,
@@ -41,6 +45,8 @@ export interface RunOptions {
   env?: Record<string, string | undefined>;
   tty?: boolean;
   api?: ApiClient;
+  /** A fake Docker for `agent run`, so the suite never needs a container engine. */
+  shell?: Shell;
 }
 
 /**
@@ -84,7 +90,18 @@ export async function run(argv: readonly string[], options: RunOptions = {}): Pr
   const api =
     options.api ?? new ApiClient(stringFlag(args, 'api') ?? env.AGENTSPACES_API ?? DEFAULT_API);
 
-  await command({ io, api, style, json: boolFlag(args, 'json'), cwd, env }, args);
+  await command(
+    {
+      io,
+      api,
+      style,
+      json: boolFlag(args, 'json'),
+      cwd,
+      env,
+      ...(options.shell === undefined ? {} : { shell: options.shell }),
+    },
+    args,
+  );
   return 0;
 }
 

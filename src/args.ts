@@ -32,6 +32,7 @@ const VALUE_FLAGS = new Set([
   'file',
   'category',
   'brain',
+  'image',
 ]);
 
 export function parseArgs(argv: readonly string[]): ParsedArgs {

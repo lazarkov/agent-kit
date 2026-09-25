@@ -105,6 +105,24 @@ Four layers, and you can change any one of them without touching the others.
    └────────────────────┘    └────────────────────┘
 ```
 
+## Running it before you deploy it
+
+```bash
+agent run --test     # starts a container, places the project, runs setup.sh and test.yaml
+docker exec -it agentkit-inbox-helper hermes
+agent run --down
+```
+
+The image is the pinned one the cloud deploys for your `brain:`, so what comes up is
+the runtime rather than an approximation of it. Real values go in `.env.local`, which
+`agent init` gitignores: its lines are the container's environment, and they also
+answer the placeholders, so `TEAM_NAME=Platform` fills `{{teamName}}`. Everything runs
+as the user the agent runs as, which catches a file the agent cannot read.
+
+One difference, and `agent run` prints it every time: locally the runtime keeps its own
+default config, while the cloud renders a hardened one on top, so approvals, the website
+blocklist and the toolsets are not the same there.
+
 ## Commands
 
 `Login` is whether the command needs an account. Nothing in this release does, because
@@ -117,6 +135,7 @@ none of it provisions a server.
 | `agent build [dir]` | Compile the project to the one document a cloud takes, at `.agentspaces/agent.md`. `--emit` prints it instead. | no |
 | `agent validate [dir]` | Have the platform read it and report the agent it describes. | no |
 | `agent explain [dir]` | The long form: the wizard, the environment keys, the toolsets, the soul. | no |
+| `agent run [dir]` | Run it here, in a container from the same image the cloud deploys. `--test` runs `test.yaml` inside it, `--down` removes it, `--image` overrides the pin. Needs Docker. | no |
 | `agent templates` | The platform's examples, each adding one part of the format to the last. | no |
 | `agent runtimes` | Which container image each `brain:` resolves to, and what was verified when. | no |
 | `agent models --provider <p>` | A provider's catalogue, cheapest first, with tool support marked. | no |

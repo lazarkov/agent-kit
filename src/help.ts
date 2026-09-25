@@ -20,6 +20,7 @@ export function printHelp(io: Io, style: Style, version: string): void {
   io.out('  build [dir]           compile it to one document (--emit prints it instead)');
   io.out('  validate [dir]        have the platform read it and say what it would build');
   io.out('  explain [dir]         the same, read out at length: wizard, env, tools, soul');
+  io.out('  run [dir]             run it here in the cloud’s own image (--test, --down)');
   io.out('');
   io.out(style.bold('What you can build on'));
   io.out('  templates             the platform’s worked examples');
