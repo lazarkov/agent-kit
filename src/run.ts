@@ -121,11 +121,36 @@ function version(): string {
 }
 
 /**
+ * A reader that stops reading is not an error.
+ *
+ * `agent search | head` closes our end of the pipe while we are still writing, and an
+ * unhandled EPIPE ends a node program by printing a stack trace over the output the
+ * reader asked for and exiting non-zero. Piping a list into `head`, `less` or `grep -m1`
+ * is an ordinary thing to do, so it ends quietly and successfully instead.
+ */
+export function endQuietlyOnClosedPipe(
+  stream: { on(event: 'error', listener: (err: NodeJS.ErrnoException) => void): unknown },
+  exit: () => void,
+): void {
+  stream.on('error', (err) => {
+    if (err.code === 'EPIPE') {
+      exit();
+      return;
+    }
+    throw err;
+  });
+}
+
+/**
  * The bin's body. Lives here rather than in `cli.ts` so that importing any of this
  * from a test cannot start a program; `cli.ts` is two lines and calls this.
  */
 export async function main(): Promise<void> {
   const io = consoleIo;
+  for (const stream of [process.stdout, process.stderr]) {
+    endQuietlyOnClosedPipe(stream, () => process.exit(0));
+  }
+
   try {
     process.exitCode = await run(process.argv.slice(2));
   } catch (err) {

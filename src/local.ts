@@ -398,9 +398,16 @@ export function readEnvScript(): string {
   return READ_ENV.join('\n');
 }
 
+/**
+ * Remove it, and say whether there was anything there.
+ *
+ * Not the exit code, which is the trap: `docker rm --force` on a name that does not
+ * exist exits 0 and complains on stderr, so a teardown of nothing reported a removal.
+ * What it does do is echo the name it removed, and nothing when it removed nothing.
+ */
 export async function removeContainer(shell: Shell, name: string): Promise<boolean> {
   const result = await shell(['rm', '--force', '--volumes', name]);
-  return result.code === 0;
+  return result.code === 0 && result.stdout.trim().length > 0;
 }
 
 /** Single-quote a path for `sh -c`, the one escape being a doubled quote. */

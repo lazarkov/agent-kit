@@ -1,6 +1,8 @@
+import { PassThrough } from 'node:stream';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { main } from '../src/run.js';
+import { endQuietlyOnClosedPipe, main } from '../src/run.js';
 
 /**
  * The bin's own behaviour: what reaches a terminal, and what exit code a script sees.
@@ -70,5 +72,38 @@ describe('main', () => {
     expect(code).toBe(0);
     expect(out).toContain('Usage');
     expect(err).toBe('');
+  });
+});
+
+/**
+ * Found by piping the installed package into `head`: every list command printed a
+ * stack trace over its own output and exited 1. Reading the first few lines of a list
+ * is the most ordinary thing anyone does with one.
+ */
+describe('a reader that stops reading', () => {
+  it('ends the program quietly and successfully', () => {
+    const stream = new PassThrough();
+    let exits = 0;
+    endQuietlyOnClosedPipe(stream, () => {
+      exits += 1;
+    });
+
+    stream.emit('error', Object.assign(new Error('write EPIPE'), { code: 'EPIPE' }));
+    expect(exits).toBe(1);
+  });
+
+  it('still lets a real write failure be a failure', () => {
+    const stream = new PassThrough();
+    let exits = 0;
+    endQuietlyOnClosedPipe(stream, () => {
+      exits += 1;
+    });
+
+    // A full disk is not a reader walking away, and swallowing it would lose output
+    // silently, which is the failure this is meant to be the opposite of.
+    expect(() => stream.emit('error', Object.assign(new Error('no space'), { code: 'ENOSPC' }))).toThrow(
+      /no space/,
+    );
+    expect(exits).toBe(0);
   });
 });

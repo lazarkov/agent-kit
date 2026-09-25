@@ -81,6 +81,10 @@ export async function localRun(ctx: Context, args: ParsedArgs): Promise<void> {
   }
 
   const runtime = localRuntime(brain);
+  // Read before anything is started, not when the moment comes to run it: `--test` on a
+  // project that declares no test is answerable from the directory alone, and finding
+  // out after a container is up leaves one behind to be cleaned up for nothing.
+  const declaredTest = boolFlag(args, 'test') ? testCommand(dir) : null;
   const image = stringFlag(args, 'image') ?? (await pinnedImage(ctx, brain));
 
   // Rebuilt rather than reused, because the question a local run answers is whether a
@@ -138,7 +142,11 @@ export async function localRun(ctx: Context, args: ParsedArgs): Promise<void> {
     ? await step(shell, container, resolve(read(dir, 'setup.sh')))
     : null;
 
-  const test = boolFlag(args, 'test') ? await runTest(shell, container, dir, resolve) : null;
+  let test: Step | null = null;
+  if (declaredTest !== null) {
+    const command = resolve(declaredTest);
+    test = { command, ...(await step(shell, container, command)) };
+  }
 
   if (ctx.json) {
     return jsonOut(ctx.io, {
@@ -204,13 +212,8 @@ async function step(shell: Shell, container: Container, command: string): Promis
   return { code: result.code, output: `${result.stdout}${result.stderr}`.trim() };
 }
 
-/** The project's own test, run the way the platform's own test-scan runs it. */
-async function runTest(
-  shell: Shell,
-  container: Container,
-  dir: string,
-  resolve: (text: string) => string,
-): Promise<Step> {
+/** The project's own test, as written, so `--test` can be refused before anything runs. */
+function testCommand(dir: string): string {
   const body = read(dir, 'test.yaml');
   if (body.trim().length === 0) {
     throw new CliError('This project declares no test.', {
@@ -226,9 +229,7 @@ async function runTest(
       hint: 'It is one line: command: <what to run inside the container>',
     });
   }
-
-  const command = resolve(found[1].trim().replace(/^["'](.*)["']$/, '$1'));
-  return { command, ...(await step(shell, container, command)) };
+  return found[1].trim().replace(/^["'](.*)["']$/, '$1');
 }
 
 /**

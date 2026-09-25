@@ -46,7 +46,15 @@ function fakeDocker(options: { home?: string; owner?: string; exists?: boolean }
     lines.push(args.join(' '));
     if (stdin !== undefined) stdins.push(stdin);
 
-    if (args[0] === 'inspect') return options.exists ? ok('running\n') : { stdout: '', stderr: 'No such object', code: 1 };
+    if (args[0] === 'container' && args[1] === 'inspect') {
+      return options.exists ? ok('running\n') : { stdout: '', stderr: 'No such object', code: 1 };
+    }
+    // Docker's own asymmetry, and a bug once: removing nothing exits 0 and prints
+    // nothing, while a real removal echoes the name it removed.
+    if (args[0] === 'rm') {
+      const name = args[args.length - 1] ?? '';
+      return options.exists ? ok(`${name}\n`) : { stdout: '', stderr: 'Error: No such container', code: 0 };
+    }
     if (args.includes('printenv')) {
       const variable = args[args.length - 1];
       if (variable === 'HERMES_HOME') {
@@ -202,7 +210,7 @@ describe('run', () => {
       project(dir);
       writeFileSync(join(dir, 'test.yaml'), '', 'utf8');
       const docker = fakeDocker({ home: '/opt/data' });
-      const { client } = fakeApi({ '/agents/runtimes': { body: RUNTIMES } });
+      const { client, calls } = fakeApi({ '/agents/runtimes': { body: RUNTIMES } });
 
       await expect(
         run(['run', '--test'], {
@@ -214,6 +222,12 @@ describe('run', () => {
           shell: docker.shell,
         }),
       ).rejects.toThrow(/declares no test/);
+
+      // Found by running `--test` on a fresh scaffold: it started a container, placed
+      // the files, then said there was no test and left the container behind. A
+      // question the directory answers on its own gets answered before anything runs.
+      expect(docker.lines).toEqual([]);
+      expect(calls).toHaveLength(0);
     });
   });
 
@@ -277,6 +291,28 @@ describe('run', () => {
       expect(docker.lines).toEqual(['rm --force --volumes agentkit-standup-log']);
       expect(calls).toHaveLength(0);
       expect(io.text()).toContain('removed');
+    });
+  });
+
+  it('does not claim to have removed a container that was never there', async () => {
+    await withTempDir(async (dir) => {
+      project(dir);
+      // `docker rm --force` on a missing name exits 0, so the exit code said yes every
+      // time and a second teardown reported a second removal.
+      const docker = fakeDocker({ exists: false });
+      const { client } = fakeApi({});
+      const io = recordingIo();
+
+      await run(['run', '--down', '--json'], {
+        io,
+        cwd: dir,
+        tty: false,
+        env: {},
+        api: client,
+        shell: docker.shell,
+      });
+
+      expect(JSON.parse(io.text())).toEqual({ container: 'agentkit-standup-log', removed: false });
     });
   });
 
