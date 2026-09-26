@@ -45,4 +45,11 @@ describe('every command', () => {
     const readme = readFileSync(join(root, 'README.md'), 'utf8');
     expect(names.filter((name) => !readme.includes(`agent ${name}`))).toEqual([]);
   });
+
+  it('appears in the skill, which is read instead of the README', () => {
+    // Someone using the skill never sees the README, so a command missing from it is a
+    // command that does not exist as far as they are concerned.
+    const skill = readFileSync(join(root, 'skills/agent-kit/SKILL.md'), 'utf8');
+    expect(names.filter((name) => !skill.includes(`agent ${name}`))).toEqual([]);
+  });
 });

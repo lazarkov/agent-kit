@@ -150,6 +150,25 @@ are `0`, `1` for a failure and `2` for a command line that did not parse.
 Everything takes either shape, a project directory or a single document, so a template
 is read the same way a directory is.
 
+## If you would rather not read this
+
+There is a Claude Code skill in the package that says all of it again as an operating
+procedure, so you can ask for an agent in a sentence and let the CLI be driven for you.
+It is one file, [skills/agent-kit/SKILL.md](skills/agent-kit/SKILL.md), and installing it
+is putting it where Claude Code looks:
+
+```bash
+# for you, everywhere
+mkdir -p ~/.claude/skills && cp -r "$(npm root -g)/agent-kit/skills/agent-kit" ~/.claude/skills/
+
+# or for one repository, checked in alongside it
+mkdir -p .claude/skills && cp -r node_modules/agent-kit/skills/agent-kit .claude/skills/
+```
+
+Then `make me an agent that files my invoices` is enough. It knows the loop, which file
+holds what, that a real key never goes in a committed file, and that the platform rather
+than the CLI is the authority on whether a project is correct.
+
 ## Contributing
 
 Yes, please, especially another deploy target or another runtime. See

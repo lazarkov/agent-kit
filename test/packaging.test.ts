@@ -27,6 +27,18 @@ describe('the package', () => {
     expect(existsSync(join(projectTemplateDir(), 'agent.yaml'))).toBe(true);
   });
 
+  it('ships the skill, which is no use sitting in the repository', () => {
+    // The install line in the README copies it out of the installed package, so a
+    // tarball without it leaves that line pointing at nothing.
+    expect(manifest.files).toContain('skills');
+    const skill = readFileSync(join(root, 'skills/agent-kit/SKILL.md'), 'utf8');
+    // Claude Code reads the frontmatter to decide whether the skill is relevant at
+    // all, so a skill without a description is a skill that never loads.
+    expect(skill.startsWith('---\n')).toBe(true);
+    expect(skill).toMatch(/^name: agent-kit$/m);
+    expect(skill).toMatch(/^description: \S/m);
+  });
+
   it('ships the build, and the bins point into it', () => {
     expect(manifest.files).toContain('dist');
     for (const target of Object.values(manifest.bin)) {
